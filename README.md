@@ -11,7 +11,7 @@ No cloud APIs. No external inference services.
 
 ## 👥 Team — Makeathon 2026
 
-**Team Leader:** Praveen Ram
+**Team Leader:** Praveen Ram<br>
 **Architecture Designed By:** Praveen Ram
 
 **Team Members:**
@@ -273,5 +273,6 @@ A production-ready, hardware-aware, fully offline multimodal RAG system with:
 
 Built for Makeathon 2026.
 Engineered for real-world constraints.
+
 
 
