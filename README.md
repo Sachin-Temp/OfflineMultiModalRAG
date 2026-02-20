@@ -16,8 +16,8 @@ No cloud APIs. No external inference services.
 
 **Team Members:**
 
-* That Guy
-* Sachin V
+* Praveen Ram
+* Sachin Aadithya. V
 * Abishek Roshan KMS
 * Murugan
 * Sahana N
@@ -273,6 +273,7 @@ A production-ready, hardware-aware, fully offline multimodal RAG system with:
 
 Built for Makeathon 2026.
 Engineered for real-world constraints.
+
 
 
 
