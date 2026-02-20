@@ -2,6 +2,27 @@
 
 An offline-capable Multimodal RAG system that ingests PDF, DOCX, PPTX, Images, and Audio, retrieves relevant content using hybrid search (Milvus + Tantivy), and provides grounded answers with citations.
 
+## 👥 Team — Makeathon 2026
+
+## Team Leader: Praveen Ram
+Architecture Designed By: Praveen Ram
+
+## Team Members:
+
+Praveen Ram
+
+Sachin Aadithya. V
+
+Abishek Roshan KMS
+
+Murugan
+
+Sahana N
+
+Deepa L
+
+💻 Developed and tested on: Sachin’s laptop (RTX 3050 4GB VRAM)
+
 ## 🚀 Quick Start (Windows)
 
 ### 1. Prerequisite: Activate Environment
@@ -92,3 +113,4 @@ If the frontend says "Backend not reachable", ensure you have started the backen
 
 **Frontend: "Port 7860 is in use"**
 The frontend will now automatically try to find an open port if 7860 is busy. Check the terminal output for the actual URL (e.g., `http://127.0.0.1:7861`).
+
