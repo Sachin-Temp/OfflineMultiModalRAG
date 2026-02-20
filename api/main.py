@@ -62,7 +62,13 @@ async def lifespan(app: FastAPI):
     # We store them in app.state for access via dependencies.
     
     try:
-        app.state.milvus = MilvusStore()  # Connects to Milvus
+        try:
+            app.state.milvus = MilvusStore()  # Connects to Milvus
+            app.state.milvus.initialize()
+        except Exception as e:
+            logger.warning(f"Milvus initialization failed (offline mode): {e}")
+            app.state.milvus = MilvusStore() # Placeholder
+
         app.state.tantivy = TantivyIndex()
         app.state.sqlite = SQLiteStore()
         
@@ -73,6 +79,7 @@ async def lifespan(app: FastAPI):
             tantivy_index=app.state.tantivy,
             sqlite_store=app.state.sqlite
         )
+        app.state.retrieval_engine.initialize()
         
         # LLM Engine depends on retrieval (and maybe VRAM manager internally)
         app.state.llm_engine = LLMEngine()

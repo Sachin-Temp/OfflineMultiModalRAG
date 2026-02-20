@@ -57,10 +57,10 @@ CHUNK_OVERLAP_TOKENS = 50
 
 # ── Retrieval ──────────────────────────────────────────────────────────────
 MILVUS_TOP_K        = 50
-BM25_TOP_K          = 50
+BM25_TOP_K          = 30
 RRF_K               = 60
 RERANKER_THRESHOLD  = 0.3
-FINAL_TOP_K         = 5
+FINAL_TOP_K         = 3
 CROSS_MODAL_LINK_STRENGTH_THRESHOLD = 0.6
 
 # ── Milvus Collections ─────────────────────────────────────────────────────
@@ -83,7 +83,9 @@ SILENCE_THRESHOLD_SEC       = 2.0
 # ── LLM ───────────────────────────────────────────────────────────────────
 LLM_N_CTX          = 4096
 LLM_N_GPU_LAYERS   = -1       # offload all layers to GPU
-LLM_SPECULATIVE_DRAFT_TOKENS = 5
+LLM_N_BATCH        = 512      # Speed up prefilling
+LLM_N_UBATCH       = 512
+LLM_SPECULATIVE_DRAFT_TOKENS = 0  # Disable to save VRAM and overhead
 CHAT_HISTORY_TURNS  = 5       # how many past turns to include in prompt
 
 # ── Semantic Link Threshold ────────────────────────────────────────────────

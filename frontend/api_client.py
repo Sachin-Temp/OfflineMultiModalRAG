@@ -126,32 +126,9 @@ class APIClient:
             data  = {"session_id": session_id, "modality": modality}
             try:
                 resp = self._session.post(
-                    self._url("/ingest/file"), # Updated to match implemented endpoint
+                    self._url("/ingest/file"),
                     files=files,
-                    params=data, # Session ID is likely needed, but ingest.py doesn't take params explicitly for session_id in the implemented router, verifying logic... 
-                    # Wait, looking at ingest.py implementation provided earlier:
-                    # async def ingest_file(file: UploadFile = File(...), ...):
-                    # It does NOT take session_id as a param. It generates a file_id.
-                    # However, the frontend spec says `upload_file` takes `session_id`.
-                    # The `ingest.py` implemented `ingest_file` does NOT seem to take `session_id`.
-                    # Let's check `ingest.py` content again from previous turn.
-                    # It handles file uploads but doesn't seem to link them to a session_id in the router arguments.
-                    # But `session.py` manages sessions.
-                    # If `ingest.py` doesn't take session_id, then `upload_file` in client might need to be adjusted or `ingest.py` updated.
-                    # The instruction says "Do NOT recreate or modify any Phase 0–9 files unless explicitly instructed".
-                    # So I must stick to the existing `ingest.py`.
-                    # If `ingest.py` doesn't take `session_id`, I will pass it but it might be ignored by backend, or I should check if I missed something.
-                    # The PROMPT for Phase 10 says: `metrics = client.upload_file(Path("report.pdf"), "sess-001")`
-                    # And `POST /ingest/upload` (which is `/ingest/file` in my implementation).
-                    # I will use `/ingest/file` as per the implementation in `api/routers/ingest.py`.
-                    # I will pass `session_id` in `data` or `params` just in case, but `ingest.py` implies it handles ingestion generically.
-                    # Actually, `TextIngestor.ingest` takes `session_id` as optional.
-                    # But the router `ingest_file` in `ingest.py` does NOT expose `session_id` argument in the signature.
-                    # This might be a mismatch. Logic in `ingest.py`:
-                    # def ingest_file(file: UploadFile = File(...), ...):
-                    # It does *not* accept `session_id`.
-                    # However, I cannot modify `ingest.py`. I will implement the client as requested, targeting `/ingest/file`.
-                    timeout=self.timeout,
+                    data=data,
                 )
                 self._raise_for_status(resp)
                 return resp.json()
@@ -199,14 +176,15 @@ class APIClient:
             return resp.json().get("files", [])
         except APIError as e:
             # If endpoint missing, return empty list to not crash UI
-            if "404" in str(e): 
-                 return []
+            if "404" in str(e):
+                return []
             raise
         except Exception as e:
-             # Silently fail for now if endpoint doesn't exist to allow UI to load
-             # But properly raise if it's a connection error
-             if "404" in str(e): return []
-             raise APIError(0, f"File list unavailable: {e}")
+            # Silently fail for now if endpoint doesn't exist to allow UI to load
+            # But properly raise if it's a connection error
+            if "404" in str(e):
+                return []
+            raise APIError(0, f"File list unavailable: {e}")
 
     # ── Query ──────────────────────────────────────────────────────────────
     def stream_query(

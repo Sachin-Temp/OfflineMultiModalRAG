@@ -20,6 +20,8 @@ from config.settings import (
     LLM_DRAFT_MODEL,
     LLM_N_CTX,
     LLM_N_GPU_LAYERS,
+    LLM_N_BATCH,
+    LLM_N_UBATCH,
     LLM_SPECULATIVE_DRAFT_TOKENS,
     CHAT_HISTORY_TURNS,
     EXPORT_TRIGGER_WORDS,
@@ -340,10 +342,13 @@ def _load_llm_models() -> Tuple[Any, Any]:
                 model_path=str(main_path),
                 n_gpu_layers=LLM_N_GPU_LAYERS,
                 n_ctx=LLM_N_CTX,
+                n_batch=LLM_N_BATCH,
+                n_ubatch=LLM_N_UBATCH,
                 use_mmap=True,
                 use_mlock=False,
                 verbose=False,
-                n_threads=4,
+                n_threads=os.cpu_count() or 4,
+                flash_attn=True, # Enable if possible
             )
             logger.success(f"LLM main (3B) loaded: {main_path.name}")
         except Exception as e:
@@ -351,7 +356,7 @@ def _load_llm_models() -> Tuple[Any, Any]:
             raise RuntimeError(f"Failed to load main LLM: {e}") from e
 
     # ── Load draft model (1B) ──────────────────────────────────────────────
-    if _llm_draft is None:
+    if _llm_draft is None and LLM_SPECULATIVE_DRAFT_TOKENS > 0:
         if not draft_path.exists():
             logger.warning(
                 f"Draft LLM not found: {draft_path}. "
@@ -383,6 +388,8 @@ def _load_llm_models() -> Tuple[Any, Any]:
                 model_path=str(draft_path),
                 n_gpu_layers=LLM_N_GPU_LAYERS,
                 n_ctx=LLM_N_CTX,
+                n_batch=LLM_N_BATCH,
+                n_ubatch=LLM_N_UBATCH,
                 use_mmap=True,
                 use_mlock=False,
                 verbose=False,

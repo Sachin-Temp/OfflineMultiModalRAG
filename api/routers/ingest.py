@@ -107,12 +107,18 @@ async def ingest_file(
             # Store Text Chunks
             if res_text.text_chunks:
                 tantivy.add_text_chunks(res_text.text_chunks)
-                milvus.insert_text_chunks(res_text.text_chunks)
+                try:
+                    milvus.insert_text_chunks(res_text.text_chunks)
+                except Exception as me:
+                    logger.warning(f"Milvus text insert failed (offline): {me}")
             
             # Store Image Chunks
             if res_img.image_chunks:
                 tantivy.add_image_chunks(res_img.image_chunks)
-                milvus.insert_image_chunks(res_img.image_chunks)
+                try:
+                    milvus.insert_image_chunks(res_img.image_chunks)
+                except Exception as me:
+                    logger.warning(f"Milvus image insert failed (offline): {me}")
                 
             ii.release_models() # Free VRAM
 
@@ -122,7 +128,10 @@ async def ingest_file(
             res = ti.ingest(file_path)
             if res.text_chunks:
                 tantivy.add_text_chunks(res.text_chunks)
-                milvus.insert_text_chunks(res.text_chunks)
+                try:
+                    milvus.insert_text_chunks(res.text_chunks)
+                except Exception as me:
+                    logger.warning(f"Milvus text insert failed (offline): {me}")
                 total_chunks = len(res.text_chunks)
 
         elif ext in [".jpg", ".jpeg", ".png"]:
@@ -131,7 +140,10 @@ async def ingest_file(
             res = ii.ingest(file_path)
             if res.image_chunks:
                 tantivy.add_image_chunks(res.image_chunks)
-                milvus.insert_image_chunks(res.image_chunks)
+                try:
+                    milvus.insert_image_chunks(res.image_chunks)
+                except Exception as me:
+                    logger.warning(f"Milvus image insert failed (offline): {me}")
                 total_chunks = len(res.image_chunks)
             ii.release_models()
 
@@ -141,7 +153,10 @@ async def ingest_file(
             res = ai.ingest(file_path)
             if res.audio_chunks:
                 tantivy.add_audio_chunks(res.audio_chunks)
-                milvus.insert_audio_chunks(res.audio_chunks)
+                try:
+                    milvus.insert_audio_chunks(res.audio_chunks)
+                except Exception as me:
+                    logger.warning(f"Milvus audio insert failed (offline): {me}")
                 total_chunks = len(res.audio_chunks)
 
         # Register file in SQLite

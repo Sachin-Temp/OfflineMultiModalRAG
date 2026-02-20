@@ -263,11 +263,10 @@ class MilvusStore:
             logger.info(f"Milvus client connected: {self._uri}")
             return self._client
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to connect to Milvus at '{self._uri}': {e}\n"
-                f"On Windows, ensure Milvus is running via Docker:\n"
-                f"  docker-compose up -d"
-            ) from e
+            logger.warning(
+                f"Milvus offline at '{self._uri}': {e}. Enforcing fallback to other indexers."
+            )
+            return None
 
     def initialize(self):
         """
@@ -275,6 +274,9 @@ class MilvusStore:
         Idempotent — safe to call multiple times.
         """
         client = self._get_client()
+        if not client:
+            logger.warning("MilvusStore: Skipping initialization as Milvus is unreachable.")
+            return
 
         self._create_collection_if_not_exists(
             name=COLLECTION_TEXT,
@@ -855,9 +857,11 @@ class MilvusStore:
         _unload_bge_m3()
 
     def _ensure_initialized(self):
-        """Auto-initialize if not already done."""
+        """Ensure Milvus client is connected and collections created."""
         if not self._initialized:
             self.initialize()
+        if not self._client:
+             raise RuntimeError("Milvus connection required but unavailable.")
 
     def close(self):
         """Close the Milvus client connection."""

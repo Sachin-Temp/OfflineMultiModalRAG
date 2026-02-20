@@ -1114,11 +1114,17 @@ class RetrievalEngine:
 
         # ── Step 2: Query Encoding ─────────────────────────────────────
         t_enc = time.time()
-        embeddings = encode_query(query, self._milvus, image_bytes)
+        # Only encode if Milvus is actually connected
+        if self._milvus._client:
+            embeddings = encode_query(query, self._milvus, image_bytes)
+        else:
+            logger.warning("Milvus offline — skipping vector query encoding")
+            embeddings = {"bge_m3": None, "clip": None}
+            
         result.latency_ms["encoding"] = (time.time() - t_enc) * 1000
 
-        if embeddings["bge_m3"] is None and embeddings["clip"] is None:
-            logger.error("All query embeddings failed — cannot retrieve")
+        if not self._milvus._client and not routing.get("use_bm25"):
+            logger.error("Milvus offline and BM25 disabled — cannot retrieve")
             return result
 
         # ── Step 3: Parallel Retrieval ─────────────────────────────────

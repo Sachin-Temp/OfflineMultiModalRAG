@@ -498,29 +498,18 @@ def _new_session_id() -> str:
     return f"sess-{uuid.uuid4().hex[:12]}"
 
 
-def _load_history_to_chat(session_id: str) -> List[List[str]]:
+def _load_history_to_chat(session_id: str) -> List[Dict[str, str]]:
     """
     Load existing chat history from backend and convert to
-    Gradio chatbot format [[user_msg, assistant_msg], ...].
-    Pairs up consecutive user/assistant messages.
+    Gradio chatbot format [{"role": "user", "content": "msg"}, ...].
     """
     try:
         messages = _client.get_history(session_id, last_n=20)
-        pairs = []
-        i = 0
-        while i < len(messages):
-            if messages[i]["role"] == "user":
-                user_msg = messages[i]["message"]
-                asst_msg = ""
-                if i + 1 < len(messages) and messages[i+1]["role"] == "assistant":
-                    asst_msg = messages[i+1]["message"]
-                    i += 2
-                else:
-                    i += 1
-                pairs.append([user_msg, asst_msg])
-            else:
-                i += 1
-        return pairs
+        formatted = []
+        for msg in messages:
+            role = "assistant" if msg["role"] == "assistant" else "user"
+            formatted.append({"role": role, "content": msg["message"]})
+        return formatted
     except Exception:
         return []
 
@@ -605,14 +594,14 @@ def handle_upload(
 
 def handle_send(
     query:            str,
-    history:          List[List[str]],
+    history:          List[Dict[str, str]],
     session_id:       str,
     retrieve_only:    bool,
     max_tokens:       int,
     temperature:      float,
     top_k:            int,
     enable_reranking: bool,
-) -> Iterator[Tuple[List[List[str]], str, str, str]]:
+) -> Iterator[Tuple[List[Dict[str, str]], str, str, str]]:
     """
     Handle query submission. Generator that yields UI updates.
 
@@ -635,7 +624,10 @@ def handle_send(
 
     # ── Retrieve-only mode ─────────────────────────────────────────────────
     if retrieve_only:
-        history = history + [[query, "🔍 *Retrieving relevant chunks...*"]]
+        history = history + [
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": "🔍 *Retrieving relevant chunks...*"}
+        ]
         yield history, "", "", ""
 
         try:
@@ -653,18 +645,21 @@ def handle_send(
                 text = chunk.get("text", "")[:150]
                 chunk_summary += f"**[{i}] {mod.upper()}** — {src}\n{text}...\n\n"
 
-            history[-1][1] = chunk_summary
+            history[-1]["content"] = chunk_summary
             chunks_html    = _retrieval_chunks_html(gold_chunks)
             yield history, chunks_html, "", ""
 
         except APIError as e:
-            history[-1][1] = f"❌ Retrieval error: {e.detail}"
+            history[-1]["content"] = f"❌ Retrieval error: {e.detail}"
             yield history, "", "", ""
 
         return
 
     # ── Full RAG streaming mode ────────────────────────────────────────────
-    history       = history + [[query, ""]]
+    history       = history + [
+        {"role": "user", "content": query},
+        {"role": "assistant", "content": ""}
+    ]
     partial       = ""
     citation_html = ""
     cluster_html  = ""
@@ -690,7 +685,7 @@ def handle_send(
 
             if event_type == "token":
                 partial         += content
-                history[-1][1]   = partial
+                history[-1]["content"] = partial
                 yield history, citation_html, cluster_html, source_html
 
             elif event_type == "citation":
@@ -709,7 +704,7 @@ def handle_send(
                 # Replace [N] markers with styled spans in chatbot
                 annotated = content.get("annotated_response", "")
                 if annotated:
-                    history[-1][1] = annotated
+                    history[-1]["content"] = annotated
 
                 yield history, citation_html, cluster_html, source_html
 
@@ -719,15 +714,15 @@ def handle_send(
                 yield history, citation_html, cluster_html, source_html
 
             elif event_type == "error":
-                history[-1][1] += f"\n\n❌ *Error: {content}*"
+                history[-1]["content"] += f"\n\n❌ *Error: {content}*"
                 yield history, citation_html, cluster_html, source_html
 
     except APIError as e:
-        history[-1][1] = f"❌ **API Error**: {e.detail}"
+        history[-1]["content"] = f"❌ **API Error**: {e.detail}"
         yield history, citation_html, cluster_html, source_html
 
     except Exception as e:
-        history[-1][1] = f"❌ **Error**: {str(e)}"
+        history[-1]["content"] = f"❌ **Error**: {str(e)}"
         yield history, citation_html, cluster_html, source_html
 
 
@@ -806,7 +801,7 @@ def handle_new_session() -> Tuple[str, List, str, str, str, str]:
     return new_id, [], "", "", "", "", ""
 
 
-def handle_clear_history(session_id: str) -> Tuple[List, str]:
+def handle_clear_history(session_id: str) -> Tuple[List[Dict[str, str]], str]:
     """
     Clear chat history for the current session.
     Keeps indexed documents intact.
@@ -841,7 +836,7 @@ def handle_refresh_stats() -> Tuple[str, str]:
         return error_html, error_html
 
 
-def handle_load_session_history(session_id: str) -> List[List[str]]:
+def handle_load_session_history(session_id: str) -> List[Dict[str, str]]:
     """Load existing chat history when session_id changes."""
     if not session_id:
         return []
@@ -1168,7 +1163,7 @@ def main():
 
     target_port = GRADIO_PORT
     if is_port_in_use(target_port):
-        print(f"⚠️ Port {target_port} is in use. Finding an open port...")
+        print(f"[!] Port {target_port} is in use. Finding an open port...")
         target_port = None  # Let Gradio find a port
 
     demo.launch(
