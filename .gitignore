@@ -1,0 +1,20 @@
+# Models (too large for git)
+models/
+
+# Data (user uploads, generated files)
+data/
+
+# Logs
+logs/
+
+# Environment
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
