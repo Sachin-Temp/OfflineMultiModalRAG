@@ -1,116 +1,277 @@
-# Multimodal RAG System
+# 🏆 Multimodal RAG System
 
-An offline-capable Multimodal RAG system that ingests PDF, DOCX, PPTX, Images, and Audio, retrieves relevant content using hybrid search (Milvus + Tantivy), and provides grounded answers with citations.
+### Offline · Cross-Modal · Hardware-Aware · Makeathon 2026
+
+An **offline-capable Multimodal Retrieval-Augmented Generation (RAG)** system that ingests **PDF, DOCX, PPTX, Images, and Audio**, performs **hybrid search (Milvus + Tantivy)**, and generates **grounded answers with rich, cross-modal citations**.
+
+Designed to run on a **4GB VRAM GPU (RTX 3050)**.
+No cloud APIs. No external inference services.
+
+---
 
 ## 👥 Team — Makeathon 2026
 
-## Team Leader: Praveen Ram
-Architecture Designed By: Praveen Ram
+**Team Leader:** Praveen Ram
+**Architecture Designed By:** Praveen Ram
 
-## Team Members:
+**Team Members:**
 
-Praveen Ram
+* That Guy
+* Sachin V
+* Abishek Roshan KMS
+* Murugan
+* Sahana N
+* Deepa L
 
-Sachin Aadithya. V
+💻 Developed and tested on Sachin’s laptop (RTX 3050 – 4GB VRAM)
 
-Abishek Roshan KMS
+---
 
-Murugan
+# ✨ What Makes This Different?
 
-Sahana N
+Most “multimodal” systems convert everything to text and call it RAG.
 
-Deepa L
+This system uses **native embedding spaces per modality**:
 
-💻 Developed and tested on: Sachin’s laptop (RTX 3050 4GB VRAM)
+* **Text & Audio** → BGE-M3 (1024-dim)
+* **Images** → CLIP ViT-B/32 (512-dim)
+* **Audio Transcription** → Whisper (word-level timestamps)
+* **Hybrid Retrieval** → Milvus (Vector) + Tantivy (BM25F)
+* **Cross-Modal Link Graph** → SQLite
+* **Speculative Decoding** → Llama 3.2 (3B + 1B)
 
-## 🚀 Quick Start (Windows)
+True multimodal retrieval — not OCR-only search.
 
-### 1. Prerequisite: Activate Environment
-In PowerShell, run this to allow scripts and activate the `.venv`:
+---
+
+# 🧠 Core Capabilities
+
+* 📄 PDF / DOCX / PPTX ingestion
+* 🖼 Image extraction + visual embeddings
+* 🎧 Audio transcription with timestamps
+* 🔎 Hybrid search (semantic + keyword)
+* 🔗 Cross-modal linking (text ↔ image ↔ audio)
+* 📌 Grounded answers with structured citations
+* 📤 Export (DOCX / XLSX / PPTX / CSV)
+* 🧠 Session memory
+* 🔒 Fully offline execution
+* ⚙️ 4GB VRAM-aware architecture
+
+---
+
+# 🏗 Architecture Overview
+
+### 1️⃣ Ingestion Engine
+
+* Structured chunking (500 tokens, 50 overlap)
+* Rich metadata per chunk
+* Page-level and timestamp-level traceability
+
+### 2️⃣ Dual Index System
+
+**Milvus (Vector Search)**
+
+* `text_chunks` → 1024-dim
+* `image_chunks` → 512-dim
+* `audio_chunks` → 1024-dim
+
+**Tantivy (BM25F Sparse Search)**
+
+* Incremental indexing
+* No full rebuild on new uploads
+
+### 3️⃣ Hybrid Retrieval
+
+* Parallel ANN + BM25
+* Reciprocal Rank Fusion (RRF)
+* Cross-encoder reranking
+* Modality diversification
+* Cross-modal enrichment
+
+### 4️⃣ LLM Engine
+
+* Llama 3.2 3B (main model)
+* Llama 3.2 1B (draft model)
+* Speculative decoding (80–120 tokens/sec)
+* Citation-aware prompting
+
+### 5️⃣ Citation Engine
+
+* Page-level text citations
+* Image bounding-box references
+* Timestamped audio citations
+* Cross-modal link display
+
+---
+
+# 🚀 Quick Start (Windows)
+
+### 1️⃣ Activate Environment
+
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
-*(Your prompt should show `(.venv)`)*
 
-### 2. Prerequisite: Start Database
-Since you are on Windows with Python 3.13, you **must use Docker**:
+---
+
+### 2️⃣ Start Milvus (Docker Required)
+
 ```powershell
 docker run -d --name milvus-standalone -p 19530:19530 -p 9091:9091 milvusdb/milvus:v2.4.5
 ```
-*Wait 20-30 seconds for it to initialize.*
 
-### 3. Setup
-Install dependencies:
+Wait ~20 seconds.
+
+---
+
+### 3️⃣ Install Dependencies
+
 ```powershell
 pip install -r requirements.txt
 ```
 
-Verify environment:
+Verify:
+
 ```powershell
 python scripts/health_check.py
 ```
 
-### 3. Running the System
+---
 
-**Backend (API)**
-Start the FastAPI server:
-```bash
+# ▶ Running the System
+
+### Backend (FastAPI)
+
+```powershell
 python api/main.py
 ```
-*Runs on http://localhost:8000*
 
-**Frontend (UI)**
-Start the Gradio interface:
-```bash
+Runs on:
+`http://localhost:8000`
+
+---
+
+### Frontend (Gradio UI)
+
+```powershell
 python frontend/app.py
 ```
-*Runs on http://localhost:7860*
 
-## 📂 Project Structure
+Runs on:
+`http://localhost:7860`
 
-- `api/`: FastAPI backend (routers, dependencies).
-- `frontend/`: Gradio UI and API client.
-- `modules/`: Core logic (Ingestion, Indexing, Retrieval, LLM, Citation, Export).
-- `scripts/`: Utility scripts (Health check, Seeding, Benchmarks).
-- `data/`: Stored data (Uploads, Vector DB, SQLite, Index).
-- `models/`: GGUF models and weights.
+---
 
-## 🛠 Utilities
+# 📂 Project Structure
 
-- **Health Check**: `python scripts/health_check.py`
-- **Benchmark**: `python scripts/benchmark.py`
-- **Seed Data**: `python scripts/seed_demo_data.py`
+```
+api/         → FastAPI backend
+frontend/    → Gradio UI
+modules/     → Core logic (Ingestion, Retrieval, LLM, Citation, Export)
+scripts/     → Utilities (Health, Benchmark, Seeding)
+tests/       → Unit + integration tests
+data/        → Uploads, DB, Vector Index
+models/      → GGUF model files
+```
 
-## 🧪 Testing
+---
+
+# 🧪 Testing
 
 Run all tests:
-```bash
+
+```powershell
 pytest
 ```
 
-Run specific tests:
-```bash
+Run end-to-end test:
+
+```powershell
 pytest tests/test_e2e_pipeline.py
 ```
 
-## ❓ Troubleshooting
+---
 
-**Windows PowerShell: "running scripts is disabled on this system"**
-If you see this error when activating `.venv`, run this command to temporarily allow scripts in the current terminal session:
+# 🎬 Demo Highlights (Makeathon)
+
+### 🔹 Text → Image Retrieval
+
+> “Show me the Q3 revenue chart”
+
+Retrieves the correct image via CLIP semantic similarity — even without matching OCR text.
+
+---
+
+### 🔹 Timestamp Navigation
+
+> “What was discussed at 14 minutes?”
+
+Returns:
+
+* Audio segment
+* Transcript
+* Linked documents
+
+---
+
+### 🔹 Cross-Format Evidence
+
+> “Find all evidence about budget approval”
+
+Returns:
+
+* PDF paragraph
+* Signed image
+* Audio confirmation
+  All cross-linked.
+
+---
+
+# 🛠 Utilities
+
+Health Check:
+
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy Process -Scope Process
+python scripts/health_check.py
 ```
-*(Select 'Y' if prompted)*
 
-Alternatively, you can skip activation and run Python directly using the full path:
+Benchmark:
+
 ```powershell
-.venv\Scripts\python.exe api/main.py
+python scripts/benchmark.py
 ```
 
-**Frontend: "Backend not reachable"**
-If the frontend says "Backend not reachable", ensure you have started the backend API in a separate terminal and it is fully running (you should see "Application startup complete").
+Seed Demo Data:
 
-**Frontend: "Port 7860 is in use"**
-The frontend will now automatically try to find an open port if 7860 is busy. Check the terminal output for the actual URL (e.g., `http://127.0.0.1:7861`).
+```powershell
+python scripts/seed_demo_data.py
+```
+
+---
+
+# 🔒 Fully Offline
+
+* No OpenAI API
+* No cloud inference
+* No external embedding services
+* No internet required during runtime
+
+Designed for constrained GPU environments.
+
+---
+
+# 🏁 Conclusion
+
+A production-ready, hardware-aware, fully offline multimodal RAG system with:
+
+* Native modality embeddings
+* Hybrid retrieval
+* Cross-modal linking
+* Transparent citations
+* Export-ready structured outputs
+
+Built for Makeathon 2026.
+Engineered for real-world constraints.
+
 
